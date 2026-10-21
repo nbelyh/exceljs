@@ -15,6 +15,21 @@ jobs:
       matrix:
         node-version: [10.x, 12.x, 14.x, 16.x, 17.x, 18.x, 19.x, 20.x]
         os: [ubuntu-latest, macOS-latest, windows-latest]
+        # macOS-latest is Apple Silicon: Node 10-14 have no arm64 build, so they run on Intel
+        exclude:
+          - os: macOS-latest
+            node-version: 10.x
+          - os: macOS-latest
+            node-version: 12.x
+          - os: macOS-latest
+            node-version: 14.x
+        include:
+          - os: macos-15-intel
+            node-version: 10.x
+          - os: macos-15-intel
+            node-version: 12.x
+          - os: macos-15-intel
+            node-version: 14.x
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -42,6 +57,8 @@ jobs:
       - run: npm test
         env:
           CI: true
+          # Puppeteer's own Chrome 78 has no Apple Silicon build: use the runner's Chrome there
+          PUPPETEER_EXECUTABLE_PATH: ${{ matrix.os == 'macOS-latest' && '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' || '' }}
 
   benchmark:
     timeout-minutes: 15
